@@ -81,7 +81,11 @@ const Email = ghostBookshelf.Model.extend({
 
         model.emitChange('deleted', options);
     }
-}, {});
+}, {
+    post() {
+        return this.belongsTo('Post');
+    }
+});
 
 const Emails = ghostBookshelf.Collection.extend({
     model: Email

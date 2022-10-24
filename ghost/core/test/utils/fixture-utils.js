@@ -1,4 +1,5 @@
 // Utility Packages
+const Promise = require('bluebird');
 const _ = require('lodash');
 const path = require('path');
 const fs = require('fs-extra');
@@ -34,11 +35,11 @@ const fixtures = {
     },
 
     insertPostsAndTags: function insertPostsAndTags() {
-        return Promise.all(DataGenerator.forKnex.tags.map((tag) => {
+        return Promise.map(DataGenerator.forKnex.tags, function (tag) {
             return models.Tag.add(tag, context.internal);
-        }))
+        })
             .then(function () {
-                return sequence(_.cloneDeep(DataGenerator.forKnex.posts).map(post => () => {
+                return Promise.each(_.cloneDeep(DataGenerator.forKnex.posts), function (post) {
                     let postTagRelations = _.filter(DataGenerator.forKnex.posts_tags, {post_id: post.id});
                     let postAuthorsRelations = _.filter(DataGenerator.forKnex.posts_authors, {post_id: post.id});
 
@@ -54,12 +55,12 @@ const fixtures = {
                     post.authors = postAuthorsRelations;
 
                     return models.Post.add(post, context.internal);
-                }));
+                });
             })
             .then(function () {
-                return Promise.all(DataGenerator.forKnex.posts_meta.map((postMeta) => {
+                return Promise.map(DataGenerator.forKnex.posts_meta, function (postMeta) {
                     return models.PostsMeta.add(postMeta, context.internal);
-                }));
+                });
             });
     },
 
@@ -74,9 +75,9 @@ const fixtures = {
 
         // insert users of different roles
         return Promise.resolve(fixtures.createUsersWithRoles()).then(function () {
-            return Promise.all(DataGenerator.forKnex.tags.map((tag) => {
+            return Promise.map(DataGenerator.forKnex.tags, function (tag) {
                 return models.Tag.add(tag, context.internal);
-            }));
+            });
         }).then(function () {
             return Promise.all([
                 models.User.fetchAll(_.merge({columns: ['id']}, context.internal)),
@@ -98,11 +99,11 @@ const fixtures = {
                 k = k + 1;
             }
 
-            return Promise.all(posts.map((post, index) => {
+            return Promise.map(posts, function (post, index) {
                 posts[index].authors = [{id: posts[index].authors[0].id}];
                 posts[index].tags = [tags[Math.floor(Math.random() * (tags.length - 1))]];
                 return models.Post.add(posts[index], context.internal);
-            }));
+            });
         });
     },
 
@@ -141,17 +142,17 @@ const fixtures = {
 
         return models.User.getOwnerUser(context.internal)
             .then(function (ownerUser) {
-                return Promise.all(posts.map((post, index) => {
+                return Promise.map(posts, function (post, index) {
                     posts[index].authors = [ownerUser.toJSON()];
                     return models.Post.add(posts[index], context.internal);
-                }));
+                });
             });
     },
 
     insertTags: function insertTags() {
-        return Promise.all(DataGenerator.forKnex.tags.map((tag) => {
+        return Promise.map(DataGenerator.forKnex.tags, function (tag) {
             return models.Tag.add(tag, context.internal);
-        }));
+        });
     },
 
     insertExtraTags: function insertExtraTags(max) {
@@ -165,9 +166,9 @@ const fixtures = {
             tags.push(DataGenerator.forKnex.createBasic({name: tagName, slug: tagName}));
         }
 
-        return Promise.all(tags.map((tag, index) => {
+        return Promise.map(tags, function (tag, index) {
             return models.Tag.add(tags[index], context.internal);
-        }));
+        });
     },
 
     insertExtraPostsTags: function insertExtraPostsTags(max) {
@@ -189,20 +190,20 @@ const fixtures = {
                 throw new Error('Trying to add more posts_tags than the number of posts.');
             }
 
-            return Promise.all(posts.slice(0, max).map((post) => {
+            return Promise.map(posts.slice(0, max), function (post) {
                 post.tags = post.tags ? post.tags : [];
 
                 return models.Post.edit({
                     tags: post.tags.concat([_.find(DataGenerator.Content.tags, {id: injectionTagId})])
                 }, _.merge({id: post.id}, context.internal));
-            }));
+            });
         });
     },
 
     insertRoles: function insertRoles() {
-        return Promise.all(DataGenerator.forKnex.roles.map((role) => {
+        return Promise.map(DataGenerator.forKnex.roles, function (role) {
             return models.Role.add(role, context.internal);
-        }));
+        });
     },
 
     initOwnerUser: function initOwnerUser() {
@@ -211,9 +212,9 @@ const fixtures = {
         user = DataGenerator.forKnex.createBasic(user);
         user = _.extend({}, user, {status: 'inactive'});
 
-        return Promise.all(DataGenerator.forKnex.roles.map((role) => {
+        return Promise.map(DataGenerator.forKnex.roles, function (role) {
             return models.Role.add(role, context.internal);
-        })).then(function () {
+        }).then(function () {
             const userRolesRelation = _.cloneDeep(DataGenerator.forKnex.roles_users[0]);
             user.roles = _.filter(DataGenerator.forKnex.roles, {id: userRolesRelation.role_id});
             return models.User.add(user, context.internal);
@@ -247,10 +248,10 @@ const fixtures = {
     },
 
     createUsersWithRoles: function createUsersWithRoles() {
-        return Promise.all(DataGenerator.forKnex.roles.map((role) => {
+        return Promise.map(DataGenerator.forKnex.roles, function (role) {
             return models.Role.add(role, context.internal);
-        })).then(function () {
-            return Promise.all(_.cloneDeep(DataGenerator.forKnex.users).map((user) => {
+        }).then(function () {
+            return Promise.map(_.cloneDeep(DataGenerator.forKnex.users), function (user) {
                 let userRolesRelations = _.filter(DataGenerator.forKnex.roles_users, {user_id: user.id});
 
                 userRolesRelations = _.map(userRolesRelations, function (userRolesRelation) {
@@ -259,7 +260,7 @@ const fixtures = {
 
                 user.roles = userRolesRelations;
                 return models.User.add(user, context.internal);
-            }));
+            });
         });
     },
 
@@ -269,7 +270,7 @@ const fixtures = {
         let roles = await models.Role.fetchAll();
         roles = roles.toJSON();
 
-        return Promise.all(usersWithoutOwner.map((user) => {
+        return Promise.map(usersWithoutOwner, function (user) {
             let userRolesRelations = _.filter(DataGenerator.forKnex.roles_users, {user_id: user.id});
 
             userRolesRelations = _.map(userRolesRelations, function (userRolesRelation) {
@@ -279,7 +280,7 @@ const fixtures = {
             user.roles = userRolesRelations;
 
             return models.User.add(user, context.internal);
-        }));
+        });
     },
 
     createInactiveUser() {
@@ -314,10 +315,10 @@ const fixtures = {
         // replacement for admin2, editor2 etc
         DataGenerator.Content.extraUsers = extraUsers;
 
-        return Promise.all(extraUsers.map((user) => {
+        return Promise.map(extraUsers, function (user) {
             user.roles = roles[user.id];
             return models.User.add(user, context.internal);
-        }));
+        });
     },
 
     insertOneUser: function insertOneUser(options) {
@@ -411,19 +412,19 @@ const fixtures = {
             }
         });
 
-        return Promise.all(permsToInsert.map((perm) => {
+        return Promise.map(permsToInsert, function (perm) {
             if (!_.isEmpty(permissionsRoles)) {
                 perm.roles = permissionsRoles[perm.id];
             }
 
             return models.Permission.add(perm, context.internal);
-        }));
+        });
     },
 
     insertInvites: function insertInvites() {
-        return Promise.all(DataGenerator.forKnex.invites.map((invite) => {
+        return Promise.map(DataGenerator.forKnex.invites, function (invite) {
             return models.Invite.add(invite, context.internal);
-        }));
+        });
     },
 
     insertWebhook: function (attributes) {
@@ -437,33 +438,27 @@ const fixtures = {
     },
 
     insertWebhooks: function insertWebhooks() {
-        return Promise.all(DataGenerator.forKnex.webhooks.map((webhook) => {
+        return Promise.map(DataGenerator.forKnex.webhooks, function (webhook) {
             return models.Webhook.add(webhook, context.internal);
-        }));
+        });
     },
 
     insertIntegrations: function insertIntegrations() {
-        return Promise.all(DataGenerator.forKnex.integrations.map((integration) => {
+        return Promise.map(DataGenerator.forKnex.integrations, function (integration) {
             return models.Integration.add(integration, context.internal);
-        }));
+        });
     },
 
     insertApiKeys: function insertApiKeys() {
-        return Promise.all(DataGenerator.forKnex.api_keys.map((api_key) => {
+        return Promise.map(DataGenerator.forKnex.api_keys, function (api_key) {
             return models.ApiKey.add(api_key, context.internal);
-        }));
-    },
-
-    insertLinks: function insertLinks() {
-        return Promise.all(DataGenerator.forKnex.links.map((link) => {
-            return models.Redirect.add(link, context.internal);
-        }));
+        });
     },
 
     insertEmails: function insertEmails() {
-        return Promise.all(DataGenerator.forKnex.emails.map((email) => {
+        return Promise.map(DataGenerator.forKnex.emails, function (email) {
             return models.Email.add(email, context.internal);
-        }));
+        });
     },
 
     insertArchivedTiers: function insertArchivedTiers() {
@@ -476,36 +471,36 @@ const fixtures = {
 
     insertProducts: async function insertProducts() {
         let coreProductFixtures = fixtureManager.findModelFixtures('Product').entries;
-        await Promise.all(coreProductFixtures.map(async (product) => {
+        await Promise.map(coreProductFixtures, async (product) => {
             const found = await models.Product.findOne(product, context.internal);
             if (!found) {
                 await models.Product.add(product, context.internal);
             }
-        }));
+        });
 
         const product = await models.Product.findOne({type: 'paid'}, context.internal);
 
-        await sequence(_.cloneDeep(DataGenerator.forKnex.stripe_products).map(stripeProduct => () => {
+        await Promise.each(_.cloneDeep(DataGenerator.forKnex.stripe_products), function (stripeProduct) {
             stripeProduct.product_id = product.id;
             return models.StripeProduct.add(stripeProduct, context.internal);
-        }));
+        });
 
-        await sequence(_.cloneDeep(DataGenerator.forKnex.stripe_prices).map(stripePrice => () => {
+        await Promise.each(_.cloneDeep(DataGenerator.forKnex.stripe_prices), function (stripePrice) {
             return models.StripePrice.add(stripePrice, context.internal);
-        }));
+        });
     },
 
     insertMembersAndLabelsAndProducts: function insertMembersAndLabelsAndProducts(newsletters = false) {
-        return Promise.all(DataGenerator.forKnex.labels.map((label) => {
+        return Promise.map(DataGenerator.forKnex.labels, function (label) {
             return models.Label.add(label, context.internal);
-        })).then(function () {
+        }).then(function () {
             let coreProductFixtures = fixtureManager.findModelFixtures('Product').entries;
-            return Promise.all(coreProductFixtures.map(async (product) => {
+            return Promise.map(coreProductFixtures, async (product) => {
                 const found = await models.Product.findOne(product, context.internal);
                 if (!found) {
                     await models.Product.add(product, context.internal);
                 }
-            }));
+            });
         }).then(async function () {
             let testProductFixtures = DataGenerator.forKnex.products;
             for (const productFixture of testProductFixtures) {
@@ -520,12 +515,12 @@ const fixtures = {
         }).then(function () {
             return models.Product.findOne({type: 'paid'}, context.internal);
         }).then(function (product) {
-            return Promise.all([
-                sequence(_.cloneDeep(DataGenerator.forKnex.stripe_products).map(stripeProduct => () => {
+            return Promise.props({
+                stripeProducts: Promise.each(_.cloneDeep(DataGenerator.forKnex.stripe_products), function (stripeProduct) {
                     stripeProduct.product_id = product.id;
                     return models.StripeProduct.add(stripeProduct, context.internal);
-                })),
-                sequence(_.cloneDeep(DataGenerator.forKnex.members).map(member => () => {
+                }),
+                members: Promise.each(_.cloneDeep(DataGenerator.forKnex.members), function (member) {
                     let memberLabelRelations = _.filter(DataGenerator.forKnex.members_labels, {member_id: member.id});
 
                     memberLabelRelations = _.map(memberLabelRelations, function (memberLabelRelation) {
@@ -549,16 +544,16 @@ const fixtures = {
                     }
 
                     return models.Member.add(member, context.internal);
-                }))
-            ]);
+                })
+            });
         }).then(function () {
-            return sequence(_.cloneDeep(DataGenerator.forKnex.members_stripe_customers).map(customer => () => {
+            return Promise.each(_.cloneDeep(DataGenerator.forKnex.members_stripe_customers), function (customer) {
                 return models.MemberStripeCustomer.add(customer, context.internal);
-            }));
+            });
         }).then(function () {
-            return sequence(_.cloneDeep(DataGenerator.forKnex.stripe_prices).map(stripePrice => () => {
+            return Promise.each(_.cloneDeep(DataGenerator.forKnex.stripe_prices), function (stripePrice) {
                 return models.StripePrice.add(stripePrice, context.internal);
-            }));
+            });
         }).then(async function () {
             // Add monthly/yearly prices to default product for testing
             const defaultProduct = await models.Product.findOne({slug: 'default-product'}, context.internal);
@@ -568,9 +563,9 @@ const fixtures = {
                 yearly_price_id: DataGenerator.forKnex.stripe_prices[2].id
             }, _.merge({id: defaultProduct.id}, context.internal));
         }).then(function () {
-            return sequence(_.cloneDeep(DataGenerator.forKnex.stripe_customer_subscriptions).map(subscription => () => {
+            return Promise.each(_.cloneDeep(DataGenerator.forKnex.stripe_customer_subscriptions), function (subscription) {
                 return models.StripeCustomerSubscription.add(subscription, context.internal);
-            }));
+            });
         }).then(async function () {
             const members = (await models.Member.findAll({
                 withRelated: [
@@ -608,16 +603,16 @@ const fixtures = {
     },
 
     insertEmailsAndRecipients: function insertEmailsAndRecipients() {
-        return sequence(_.cloneDeep(DataGenerator.forKnex.emails).map(email => () => {
+        return Promise.each(_.cloneDeep(DataGenerator.forKnex.emails), function (email) {
             return models.Email.add(email, context.internal);
-        })).then(function () {
-            return sequence(_.cloneDeep(DataGenerator.forKnex.email_batches).map(emailBatch => () => {
-                return models.EmailBatch.add(emailBatch, context.internal);
-            }));
         }).then(function () {
-            return sequence(_.cloneDeep(DataGenerator.forKnex.email_recipients).map(emailRecipient => () => {
+            return Promise.each(_.cloneDeep(DataGenerator.forKnex.email_batches), function (emailBatch) {
+                return models.EmailBatch.add(emailBatch, context.internal);
+            });
+        }).then(function () {
+            return Promise.each(_.cloneDeep(DataGenerator.forKnex.email_recipients), (emailRecipient) => {
                 return models.EmailRecipient.add(emailRecipient, context.internal);
-            }));
+            });
         }).then(function () {
             const toAggregate = {
                 emailIds: DataGenerator.forKnex.emails.map(email => email.id),
@@ -629,9 +624,9 @@ const fixtures = {
     },
 
     insertNewsletters: async function insertNewsletters() {
-        return Promise.all(DataGenerator.forKnex.newsletters.map((newsletter) => {
+        return Promise.map(DataGenerator.forKnex.newsletters, function (newsletter) {
             return models.Newsletter.add(newsletter, context.internal);
-        }));
+        });
     },
 
     insertComments: async function insertComments() {
@@ -660,22 +655,16 @@ const fixtures = {
         }));
     },
 
-    insertFeedback: async function insertFeedback() {
-        await Promise.all(DataGenerator.forKnex.members_feedback.map((feedback) => {
-            return models.MemberFeedback.add(feedback, context.internal);
-        }));
-    },
-
     insertSnippets: function insertSnippets() {
-        return Promise.all(DataGenerator.forKnex.snippets.map((snippet) => {
+        return Promise.map(DataGenerator.forKnex.snippets, function (snippet) {
             return models.Snippet.add(snippet, context.internal);
-        }));
+        });
     },
 
     insertCustomThemeSettings: function insertCustomThemeSettings() {
-        return Promise.all(DataGenerator.forKnex.custom_theme_settings.map((setting) => {
+        return Promise.map(DataGenerator.forKnex.custom_theme_settings, function (setting) {
             return models.CustomThemeSetting.add(setting, context.internal);
-        }));
+        });
     },
 
     async enableAllLabsFeatures() {
@@ -805,12 +794,6 @@ const toDoList = {
     },
     clicks: function insertClicks() {
         return fixtures.insertClicks();
-    },
-    feedback: function insertFeedback() {
-        return fixtures.insertFeedback();
-    },
-    links: function insertLinks() {
-        return fixtures.insertLinks();
     }
 };
 

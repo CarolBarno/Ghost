@@ -7,8 +7,6 @@ module.exports = class LinkRedirect {
     from;
     /** @type {URL} */
     to;
-    /** @type {boolean} */
-    edited;
 
     constructor(data) {
         if (!data.id) {
@@ -21,6 +19,5 @@ module.exports = class LinkRedirect {
 
         this.from = data.from;
         this.to = data.to;
-        this.edited = !!data.edited;
     }
 };

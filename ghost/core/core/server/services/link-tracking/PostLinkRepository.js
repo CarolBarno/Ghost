@@ -1,5 +1,4 @@
 const {FullPostLink} = require('@tryghost/link-tracking');
-const _ = require('lodash');
 
 /**
  * @typedef {import('bson-objectid').default} ObjectID
@@ -23,8 +22,8 @@ module.exports = class PostLinkRepository {
     }
 
     /**
-     *
-     * @param {*} options
+     * 
+     * @param {*} options 
      * @returns {Promise<InstanceType<FullPostLink>[]>}
      */
     async getAll(options) {
@@ -47,29 +46,6 @@ module.exports = class PostLinkRepository {
         }
 
         return result;
-    }
-
-    async updateLinks(linkIds, updateData, options) {
-        const bulkUpdateOptions = _.pick(options, ['transacting']);
-
-        const bulkActionResult = await this.#LinkRedirect.bulkEdit(linkIds, 'redirects', {
-            ...bulkUpdateOptions,
-            data: updateData
-        });
-
-        return {
-            bulk: {
-                action: 'updateLink',
-                meta: {
-                    stats: {
-                        successful: bulkActionResult.successful,
-                        unsuccessful: bulkActionResult.unsuccessful
-                    },
-                    errors: bulkActionResult.errors,
-                    unsuccessfulData: bulkActionResult.unsuccessfulData
-                }
-            }
-        };
     }
 
     /**

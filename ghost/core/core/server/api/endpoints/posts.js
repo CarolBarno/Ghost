@@ -11,8 +11,7 @@ const allowedIncludes = [
     'newsletter',
     'count.signups',
     'count.paid_conversions',
-    'count.clicks',
-    'sentiment'
+    'count.clicks'
 ];
 const unsafeAttrs = ['status', 'authors', 'visibility'];
 

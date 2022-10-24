@@ -3,7 +3,6 @@ import {action} from '@ember/object';
 
 export default class ActivityFeed extends Component {
     linkScrollerTimeout = null; // needs to be global so can be cleared when needed across functions
-    excludedEventTypes = ['email_sent_event'];
 
     @action
     enterLinkURL(event) {

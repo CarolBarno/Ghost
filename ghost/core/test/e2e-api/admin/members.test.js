@@ -390,7 +390,7 @@ describe('Members API - member attribution', function () {
     });
 
     // Activity feed
-    it('Returns sign up attributions of all types in activity feed', async function () {
+    it('Returns sign up attributions in activity feed', async function () {
         // Check activity feed
         await agent
             .get(`/members/events/?filter=type:signup_event`)
@@ -429,6 +429,56 @@ describe('Members API', function () {
 
     afterEach(function () {
         mockManager.restore();
+    });
+
+    // Activity feed
+    it('Returns comments in activity feed', async function () {
+        // Check activity feed
+        await agent
+            .get(`/members/events?filter=type:comment_event`)
+            .expectStatus(200)
+            .matchHeaderSnapshot({
+                etag: anyEtag
+            })
+            .matchBodySnapshot({
+                events: new Array(2).fill({
+                    type: anyString,
+                    data: anyObject
+                })
+            })
+            .expect(({body}) => {
+                should(body.events.find(e => e.type === 'comment_event')).not.be.undefined();
+            });
+    });
+
+    it('Returns click events in activity feed', async function () {
+        // Check activity feed
+        await agent
+            .get(`/members/events?filter=type:click_event`)
+            .expectStatus(200)
+            .matchHeaderSnapshot({
+                etag: anyEtag
+            })
+            .matchBodySnapshot({
+                events: new Array(8).fill({
+                    type: anyString,
+                    data: {
+                        created_at: anyISODate,
+                        member: {
+                            id: anyObjectId,
+                            uuid: anyUuid
+                        },
+                        post: {
+                            id: anyObjectId,
+                            uuid: anyUuid,
+                            url: anyString
+                        }
+                    }
+                })
+            })
+            .expect(({body}) => {
+                should(body.events.find(e => e.type === 'click_event')).not.be.undefined();
+            });
     });
 
     // List Members
@@ -1469,7 +1519,7 @@ describe('Members API', function () {
             .expectStatus(200);
 
         const beforeMember = body2.members[0];
-        assert.equal(beforeMember.tiers.length, 2, 'The member should have two tiers now');
+        assert.equal(beforeMember.tiers.length, 2, 'The member should have two products now');
 
         // Now try to remove only the complimentary one
         const compedPayload = {
@@ -1752,9 +1802,6 @@ describe('Members API', function () {
                 }
             },
             {
-                type: 'signup_event'
-            },
-            {
                 type: 'newsletter_event',
                 data: {
                     subscribed: true,
@@ -1764,6 +1811,9 @@ describe('Members API', function () {
                         id: newsletters[0].id
                     }
                 }
+            },
+            {
+                type: 'signup_event'
             }
         ]);
 
@@ -2100,14 +2150,14 @@ describe('Members API', function () {
                 'content-disposition': anyString
             });
 
-        res.text.should.match(/id,email,name,note,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,deleted_at,labels,tiers/);
+        res.text.should.match(/id,email,name,note,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,deleted_at,labels,products/);
 
         const csv = Papa.parse(res.text, {header: true});
         should.exist(csv.data.find(row => row.name === 'Mr Egg'));
         should.exist(csv.data.find(row => row.name === 'Winston Zeddemore'));
         should.exist(csv.data.find(row => row.name === 'Ray Stantz'));
         should.exist(csv.data.find(row => row.email === 'member2@test.com'));
-        should.exist(csv.data.find(row => row.tiers.length > 0));
+        should.exist(csv.data.find(row => row.products.length > 0));
         should.exist(csv.data.find(row => row.labels.length > 0));
     });
 
@@ -2121,14 +2171,14 @@ describe('Members API', function () {
                 'content-disposition': anyString
             });
 
-        res.text.should.match(/id,email,name,note,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,deleted_at,labels,tiers/);
+        res.text.should.match(/id,email,name,note,subscribed_to_emails,complimentary_plan,stripe_customer_id,created_at,deleted_at,labels,products/);
 
         const csv = Papa.parse(res.text, {header: true});
         should.exist(csv.data.find(row => row.name === 'Mr Egg'));
         should.not.exist(csv.data.find(row => row.name === 'Egon Spengler'));
         should.not.exist(csv.data.find(row => row.name === 'Ray Stantz'));
         should.not.exist(csv.data.find(row => row.email === 'member2@test.com'));
-        // note that this member doesn't have tiers
+        // note that this member doesn't have products
         should.exist(csv.data.find(row => row.labels.length > 0));
     });
 

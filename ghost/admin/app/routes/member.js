@@ -48,39 +48,42 @@ export default class MembersRoute extends AdminRoute {
 
     @action
     async willTransition(transition) {
-        let hasDirtyAttributes = this.controller.dirtyAttributes;
+        if (this.hasConfirmed) {
+            return true;
+        }
+
+        transition.abort();
 
         // wait for any existing confirm modal to be closed before allowing transition
         if (this.confirmModal) {
             return;
         }
 
-        if (!this.hasConfirmed && hasDirtyAttributes) {
-            transition.abort();
+        if (this.controller.saveTask?.isRunning) {
+            await this.controller.saveTask.last;
+        }
 
-            if (this.controller.saveTask?.isRunning) {
-                await this.controller.saveTask.last;
-                transition.retry();
-            }
+        const shouldLeave = await this.confirmUnsavedChanges();
 
-            const shouldLeave = await this.confirmUnsavedChanges();
-
-            if (shouldLeave) {
-                this.controller.model.rollbackAttributes();
-                this.hasConfirmed = true;
-                return transition.retry();
-            }
+        if (shouldLeave) {
+            this.controller.model.rollbackAttributes();
+            this.hasConfirmed = true;
+            return transition.retry();
         }
     }
 
     async confirmUnsavedChanges() {
-        this.confirmModal = this.modals
-            .open(ConfirmUnsavedChangesModal)
-            .finally(() => {
-                this.confirmModal = null;
-            });
+        if (this.controller.model?.hasDirtyAttributes) {
+            this.confirmModal = this.modals
+                .open(ConfirmUnsavedChangesModal)
+                .finally(() => {
+                    this.confirmModal = null;
+                });
 
-        return this.confirmModal;
+            return this.confirmModal;
+        }
+
+        return true;
     }
 
     closeImpersonateModal(transition) {

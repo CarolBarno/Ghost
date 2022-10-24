@@ -1,11 +1,10 @@
 import AppContext from '../../AppContext';
-import ActionButton from '../common/ActionButton';
+
 import {useContext, useEffect, useState} from 'react';
 import {getSiteNewsletters} from '../../utils/helpers';
 import setupGhostApi from '../../utils/api';
 import NewsletterManagement from '../common/NewsletterManagement';
 import CloseButton from '../common/CloseButton';
-import {ReactComponent as WarningIcon} from '../../images/icons/warning-fill.svg';
 
 const React = require('react');
 
@@ -96,26 +95,13 @@ export default function UnsubscribePage() {
     // Case: Email not found
     if (member === null) {
         return (
-            <div className='gh-portal-content gh-portal-feedback with-footer'>
+            <div className='gh-portal-content gh-portal-unsubscribe with-footer'>
                 <CloseButton />
-                <div class="gh-feedback-icon gh-feedback-icon-error">
-                    <WarningIcon />
-                </div>
-                <h1 className="gh-portal-main-title">That didn't go to plan</h1>
+                <AccountHeader />
+                <h1 className="gh-portal-main-title">Unsubscribe failed</h1>
                 <div>
-                    <p className="gh-portal-text-center">We couldn't unsubscribe you as the email address was not found. Please contact the site owner.</p>
+                    <p className="gh-portal-text-center">Email address not found.</p>
                 </div>
-                <ActionButton
-                    style={{width: '100%'}}
-                    retry={false}
-                    onClick = {() => onAction('closePopup')}
-                    disabled={false}
-                    brandColor='#000000'
-                    label={'Close'}
-                    isRunning={false}
-                    tabindex='3'
-                    classes={'sticky bottom'}
-                />
             </div>
         );
     }

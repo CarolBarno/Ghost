@@ -7,7 +7,6 @@ const LinkRedirect = require('./LinkRedirect');
  * @typedef {object} ILinkRedirectRepository
  * @prop {(url: URL) => Promise<LinkRedirect|undefined>} getByURL
  * @prop {({filter: string}) => Promise<LinkRedirect[]>} getAll
- * @prop {({filter: string}) => Promise<String[]>} getFilteredIds
  * @prop {(linkRedirect: LinkRedirect) => Promise<void>} save
  */
 
@@ -46,15 +45,6 @@ class LinkRedirectsService {
             url = new URL(`r/${slug}`, this.#baseURL);
         }
         return url;
-    }
-
-    /**
-     * @param {Object} options
-     *
-     * @returns {Promise<String[]>}
-     */
-    async getFilteredIds(options) {
-        return await this.#linkRedirectRepository.getFilteredIds(options);
     }
 
     /**

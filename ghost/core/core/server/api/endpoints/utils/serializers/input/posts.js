@@ -16,26 +16,7 @@ function removeSourceFormats(frame) {
     }
 }
 
-/**
- * Map names of relations to the internal names
- */
-function mapWithRelated(frame) {
-    if (frame.options.withRelated) {
-        // Map sentiment to count.sentiment
-        if (labs.isSet('audienceFeedback')) {
-            frame.options.withRelated = frame.options.withRelated.map((relation) => {
-                return relation === 'sentiment' ? 'count.sentiment' : relation;
-            });
-        }
-        return;
-    }
-}
-
 function defaultRelations(frame) {
-    // Apply same mapping as content API
-    mapWithRelated(frame);
-
-    // Addditional defaults for admin API
     if (frame.options.withRelated) {
         return;
     }
@@ -45,7 +26,7 @@ function defaultRelations(frame) {
     }
 
     if (labs.isSet('audienceFeedback')) {
-        frame.options.withRelated = ['tags', 'authors', 'authors.roles', 'email', 'tiers', 'newsletter', 'count.conversions', 'count.clicks', 'count.sentiment', 'count.positive_feedback', 'count.negative_feedback'];
+        frame.options.withRelated = ['tags', 'authors', 'authors.roles', 'email', 'tiers', 'newsletter', 'count.signups', 'count.paid_conversions', 'count.clicks', 'count.sentiment', 'count.positive_feedback'];
     } else {
         frame.options.withRelated = ['tags', 'authors', 'authors.roles', 'email', 'tiers', 'newsletter', 'count.signups', 'count.paid_conversions', 'count.clicks'];
     }
@@ -130,7 +111,6 @@ module.exports = {
 
             setDefaultOrder(frame);
             forceVisibilityColumn(frame);
-            mapWithRelated(frame);
         }
 
         if (!localUtils.isContentAPI(frame)) {

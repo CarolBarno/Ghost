@@ -10,10 +10,6 @@ const messages = {
     permissionRoleActionError: 'Cannot {action} permission({permission}) with role({role}) - {resource} does not exist'
 };
 
-/**
- * @param {import('knex').Knex} connection
- * @param {PermissionConfig} config
- */
 async function addPermissionHelper(connection, config) {
     const existingPermission = await connection('permissions').where({
         name: config.name,
@@ -42,10 +38,6 @@ async function addPermissionHelper(connection, config) {
     });
 }
 
-/**
- * @param {import('knex').Knex} connection
- * @param {PermissionConfig} config
- */
 async function removePermissionHelper(connection, config) {
     const existingPermission = await connection('permissions').where({
         name: config.name,
@@ -69,7 +61,10 @@ async function removePermissionHelper(connection, config) {
 /**
  * Creates a migration which will add a permission to the database
  *
- * @param {PermissionConfig} config
+ * @param {Object} config
+ * @param {string} config.name - The name of the permission
+ * @param {string} config.action - The action_type of the permission
+ * @param {string} config.object - The object_type of the permission
  *
  * @returns {Migration}
  */
@@ -87,7 +82,10 @@ function addPermission(config) {
 /**
  * Creates a migration which will remove a permission from the database
  *
- * @param {PermissionConfig} config
+ * @param {Object} config
+ * @param {string} config.name - The name of the permission
+ * @param {string} config.action - The action_type of the permission
+ * @param {string} config.object - The object_type of the permission
  *
  * @returns {Migration}
  */
@@ -102,10 +100,6 @@ function removePermission(config) {
     );
 }
 
-/**
- * @param {import('knex').Knex} connection
- * @param {PermissionRoleConfig} config
- */
 async function addPermissionToRoleHelper(connection, config) {
     const permission = await connection('permissions').where({
         name: config.permission
@@ -155,10 +149,6 @@ async function addPermissionToRoleHelper(connection, config) {
     });
 }
 
-/**
- * @param {import('knex').Knex} connection
- * @param {PermissionRoleConfig} config
- */
 async function removePermissionFromRoleHelper(connection, config) {
     const permission = await connection('permissions').where({
         name: config.permission
@@ -198,7 +188,9 @@ async function removePermissionFromRoleHelper(connection, config) {
 /**
  * Creates a migration which will link a permission to a role in the database
  *
- * @param {PermissionRoleConfig} config
+ * @param {Object} config
+ * @param {string} config.permission - The name of the permission
+ * @param {string} config.role - The name of the role
  *
  * @returns {Migration}
  */
@@ -216,7 +208,9 @@ function addPermissionToRole(config) {
 /**
  * Creates a migration which will remove the permission from roles
  *
- * @param {PermissionRoleConfig} config
+ * @param {Object} config
+ * @param {string} config.permission - The name of the permission
+ * @param {string} config.role - The name of the role
  *
  * @returns {Migration}
  */
@@ -234,7 +228,11 @@ function removePermissionFromRole(config) {
 /**
  * Creates a migration which will add a permission to the database, and then link it to roles
  *
- * @param {PermissionConfig} config
+ * @param {Object} config
+ * @param {string} config.name - The name of the permission
+ * @param {string} config.action - The action_type of the permission
+ * @param {string} config.object - The object_type of the permission
+ *
  * @param {string[]} roles - A list of role names
  *
  * @returns {Migration}
@@ -249,7 +247,11 @@ function addPermissionWithRoles(config, roles) {
 /**
  * Creates a migration which will remove permissions from roles, and then remove the permission
  *
- * @param {PermissionConfig} config
+ * @param {Object} config
+ * @param {string} config.name - The name of the permission
+ * @param {string} config.action - The action_type of the permission
+ * @param {string} config.object - The object_type of the permission
+ *
  * @param {string[]} roles - A list of role names
  *
  * @returns {Migration}
@@ -267,19 +269,6 @@ module.exports = {
     addPermissionWithRoles,
     createRemovePermissionMigration
 };
-
-/**
- * @typedef {Object} PermissionConfig
- * @prop {string} config.name - The name of the permission
- * @prop {string} config.action - The action_type of the permission
- * @prop {string} config.object - The object_type of the permission
- */
-
-/**
- * @typedef {Object} PermissionRoleConfig
- * @prop {string} config.permission - The name of the permission
- * @prop {string} config.role - The role to assign the Permission to
- */
 
 /**
  * @typedef {Object} TransactionalMigrationFunctionOptions

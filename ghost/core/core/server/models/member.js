@@ -114,12 +114,6 @@ const Member = ghostBookshelf.Model.extend({
                 joinTable: 'email_recipients',
                 joinFrom: 'member_id',
                 joinTo: 'email_id'
-            },
-            feedback: {
-                tableName: 'members_feedback',
-                tableNameAs: 'feedback',
-                type: 'oneToOne',
-                joinFrom: 'member_id'
             }
         };
     },

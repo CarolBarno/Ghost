@@ -127,9 +127,5 @@ module.exports = {
 
     get members_stripe_connect() {
         return require('./members-stripe-connect');
-    },
-
-    get links() {
-        return require('./links');
     }
 };

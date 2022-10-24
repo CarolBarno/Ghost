@@ -4,7 +4,6 @@ const mail = require('../mail');
 const models = require('../../models');
 const urlUtils = require('../../../shared/url-utils');
 const limitService = require('../limits');
-const labs = require('../../../shared/labs');
 
 const MAGIC_LINK_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
 
@@ -14,6 +13,5 @@ module.exports = new NewslettersService({
     mail,
     singleUseTokenProvider: new SingleUseTokenProvider(models.SingleUseToken, MAGIC_LINK_TOKEN_VALIDITY),
     urlUtils,
-    limitService,
-    labs
+    limitService
 });

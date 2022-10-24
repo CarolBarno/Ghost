@@ -58,8 +58,7 @@ module.exports = function MembersAPI({
         StripePrice,
         Product,
         Settings,
-        Comment,
-        MemberFeedback
+        Comment
     },
     stripeAPIService,
     offersAPI,
@@ -113,7 +112,6 @@ module.exports = function MembersAPI({
         MemberCreatedEvent,
         SubscriptionCreatedEvent,
         MemberLinkClickEvent,
-        MemberFeedback,
         Comment,
         labsService,
         memberAttributionService

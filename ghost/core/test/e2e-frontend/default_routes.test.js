@@ -326,8 +326,7 @@ describe('Default Frontend routing', function () {
                 'User-agent: *\n' +
                 'Sitemap: http://127.0.0.1:2369/sitemap.xml\nDisallow: /ghost/\n' +
                 'Disallow: /p/\n' +
-                'Disallow: /email/\n' +
-                'Disallow: /r/\n'
+                'Disallow: /email/\n'
             );
         });
 

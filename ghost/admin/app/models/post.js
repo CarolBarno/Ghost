@@ -79,7 +79,6 @@ export default Model.extend(Comparable, ValidationEngine, {
     validationType: 'post',
 
     count: attr(),
-    sentiment: attr(),
     createdAtUTC: attr('moment-utc'),
     excerpt: attr('string'),
     customExcerpt: attr('string'),
@@ -196,8 +195,8 @@ export default Model.extend(Comparable, ValidationEngine, {
             && this.email && this.email.status === 'failed';
     }),
 
-    showAudienceFeedback: computed('sentiment', function () {
-        return this.feature.get('audienceFeedback') && this.sentiment !== undefined;
+    showAudienceFeedback: computed('count', function () {
+        return this.feature.get('audienceFeedback') && this.count.sentiment !== undefined;
     }),
 
     showEmailOpenAnalytics: computed('hasBeenEmailed', 'isSent', 'isPublished', function () {

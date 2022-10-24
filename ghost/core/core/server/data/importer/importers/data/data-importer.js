@@ -13,7 +13,6 @@ const NewslettersImporter = require('./newsletters');
 const ProductsImporter = require('./products');
 const StripeProductsImporter = require('./stripe-products');
 const StripePricesImporter = require('./stripe-prices');
-const CustomThemeSettingsImporter = require('./custom-theme-settings');
 const RolesImporter = require('./roles');
 let importers = {};
 let DataImporter;
@@ -36,7 +35,6 @@ DataImporter = {
         importers.stripe_products = new StripeProductsImporter(importData.data);
         importers.stripe_prices = new StripePricesImporter(importData.data);
         importers.posts = new PostsImporter(importData.data);
-        importers.custom_theme_settings = new CustomThemeSettingsImporter(importData.data);
 
         return importData;
     },
